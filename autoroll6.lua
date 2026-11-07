@@ -1018,14 +1018,35 @@ end)
 print("[ScyFe AutoRollbackStyle] Carregado. RightShift abre/fecha.")
 
 -- ============================================================
--- Auto-start
+-- Auto-start (Com verificação de carregamento)
 -- ============================================================
 if State.autoStart then
     task.spawn(function()
-        task.wait(2)
-        if _G.ScyFeAutoRollback and not State.running then
-            print("[ScyFe AutoRollbackStyle] Auto-start ativado. Iniciando...")
-            startSpin()
+        print("[ScyFe AutoRollbackStyle] Auto-start ativado. Aguardando o jogo carregar...")
+        
+        -- Tenta por até 30 segundos encontrar a interface do jogo
+        local timeout = 30
+        local start = os.clock()
+        local ready = false
+        
+        while os.clock() - start < timeout do
+            -- Verifica se o estilo atual já consegue ser lido (significa que o lobby carregou)
+            local style = getCurrentStyle()
+            if style then
+                ready = true
+                break
+            end
+            task.wait(1)
+        end
+        
+        if ready then
+            task.wait(1.5) -- Pequeno delay extra para garantir que as variáveis da UI assentaram
+            if _G.ScyFeAutoRollback and not State.running then
+                print("[ScyFe AutoRollbackStyle] Jogo carregado. Iniciando Auto Start...")
+                startSpin()
+            end
+        else
+            warn("[ScyFe AutoRollbackStyle] Auto Start falhou: O jogo não carregou a interface a tempo.")
         end
     end)
 end
